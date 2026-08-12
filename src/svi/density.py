@@ -1,14 +1,13 @@
-# Read the market's probability distribution off the surface.
-
+# We read the market's probability distribution off the surface.
+#
 # Breeden-Litzenberger: the second derivative of call prices in strike is
 # the (discounted) density of S_T. For an SVI smile in (k, w) coordinates
 # that density is q(k) = g(k) / sqrt(2*pi*w) * exp(-d2^2 / 2) with
-# d2 = -k/sqrt(w) - sqrt(w)/2 -- the same g(k) used for the butterfly
-# check. The arbitrage police and the forecast distribution are one object:
-# g >= 0 IS "probabilities are non-negative".
-
+# d2 = -k/sqrt(w) - sqrt(w)/2, the same g(k) we used for the butterfly
+# check. The arbitrage police and the forecast distribution are one
+# object: g >= 0 IS "probabilities are non-negative".
+#
 # Output: the implied density of the index level at a few horizons.
-
 
 import sys
 
@@ -26,7 +25,7 @@ from black76 import invert_chain
 from fit import fit_all
 from model import svi_derivs
 from surface import g_function, repair_calendar
-from plots import _style
+from plots import _style, style_of
 
 TARGET_T = [0.08, 0.25, 0.49, 1.05]     # ~1m, 3m, 6m, 1y
 
@@ -51,9 +50,7 @@ if __name__ == "__main__":
     fits, _ = repair_calendar(fit_all(iv), ranges)
 
     fig, ax = plt.subplots(figsize=(9.5, 5.5))
-    cmap = plt.get_cmap("viridis")
-    tmax = max(TARGET_T)
-    for t in TARGET_T:
+    for i, t in enumerate(TARGET_T):
         p = fits.iloc[(fits["T"] - t).abs().argmin()]
         F = float(fwd.loc[fwd["expiry"] == p["expiry"], "F"].iloc[0])
         lo, hi = ranges[p["expiry"]]
@@ -61,8 +58,8 @@ if __name__ == "__main__":
         qk = implied_density_k(k, p["a"], p["b"], p["rho"], p["m"], p["s"])
         # change of variable to index level: S = F*e^k, q_S = q_k / S
         S = F * np.exp(k)
-        ax.plot(S, qk / S * 1000, "-", lw=1.7,
-                color=cmap(0.85 * p["T"] / tmax),
+        c, _, dash = style_of(i)
+        ax.plot(S, qk / S * 1000, linestyle=dash, lw=1.8, color=c,
                 label=f"{p['expiry'].date()}   {p['T']:.2f}y")
         mass = np.trapezoid(qk, k)
         print(f"T={p['T']:.2f}  density mass on quoted range: {mass:.3f}")
