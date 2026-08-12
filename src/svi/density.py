@@ -58,8 +58,8 @@ if __name__ == "__main__":
         qk = implied_density_k(k, p["a"], p["b"], p["rho"], p["m"], p["s"])
         # change of variable to index level: S = F*e^k, q_S = q_k / S
         S = F * np.exp(k)
-        c, _, dash = style_of(i)
-        ax.plot(S, qk / S * 1000, linestyle=dash, lw=1.8, color=c,
+        c = style_of(i)
+        ax.plot(S, qk / S * 1000, "-", lw=1.8, color=c,
                 label=f"{p['expiry'].date()}   {p['T']:.2f}y")
         mass = np.trapezoid(qk, k)
         print(f"T={p['T']:.2f}  density mass on quoted range: {mass:.3f}")
