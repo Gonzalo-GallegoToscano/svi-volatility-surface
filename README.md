@@ -13,16 +13,16 @@ Dots are cleaned quotes, lines are the 5-parameter SVI fits. Median error is
 
 ## Pipeline
 
-| stage | file | state |
-|---|---|---|
-| load the chain | `src/svi/chain.py` | done |
-| filter bad quotes | `src/svi/filter.py` | done |
-| forwards and discounts from parity | `src/svi/forwards.py` | done |
-| implied vols (Black-76 + brentq) | `src/svi/black76.py` | done |
-| plots of the raw smiles | `src/svi/plots.py` | done |
-| SVI fit per expiry | `src/svi/model.py`, `src/svi/fit.py` | done |
-| no-arbitrage checks and repair | `src/svi/surface.py` | done |
-| implied densities | `src/svi/density.py` | done |
+| stage | file | 
+|---|---|
+| load the chain | `src/svi/chain.py` |
+| filter bad quotes | `src/svi/filter.py` |
+| forwards and discounts from parity | `src/svi/forwards.py` |
+| implied vols (Black-76 + brentq) | `src/svi/black76.py` |
+| plots of the raw smiles | `src/svi/plots.py` |
+| SVI fit per expiry | `src/svi/model.py`, `src/svi/fit.py` |
+| no-arbitrage checks and repair | `src/svi/surface.py` |
+| implied densities | `src/svi/density.py` |
 
 ## Data
 
@@ -129,7 +129,7 @@ Several parameter sets draw nearly the same curve over the quoted range and
 differ only in wings the market never priced. The curve is the identified
 object; the wings are priors, and I say so rather than pretend otherwise.
 
-### No-arbitrage
+### Arbitrage-free
 
 ![total variance](figures/total_variance.png)
 
@@ -162,7 +162,24 @@ total mass without anything forcing it to, which is a quiet consistency
 check on the whole pipeline. These are risk-neutral densities, so they
 embed risk premia and are not pure forecasts.
 
-## Next
+## Conclusion
 
-Tests in `tests/`, and a second
-snapshot to watch the parameters move day over day.
+One CSV in, about 240 numbers out: figures/svi_params.csv holds five
+parameters for each of 48 maturities, mutually consistent, individually
+density-positive, able to price any strike at any of those dates without
+offering free money. The densities read off the result are the same
+information as the smiles, translated from vol into probability.
+
+Three things I take away from building it. First, most of "cleaning" is
+not about bad data: two thirds of what I removed was deliberate selection
+(the ITM half...), and the genuine quality findings were a
+few percent of stale or dead quotes. Second, the option chain is its own
+reference frame: put-call parity handed me the forwards, the discounts
+and even the true index level while the header spot was stale, with no
+rate or dividend model anywhere. Third, least squares identifies the curve, 
+not the parameters. With strikes only out to |k| of about 1, several parameter 
+sets draw the same smile over the quoted range and differ only in wings 
+the market never priced, so the wings rest on priors I state instead of estimates 
+I pretend to have. Fittingly, the only arbitrage violations appeared
+exactly where that identification dies, at the edge of the data, and the
+cost of repairing them is on record in vol basis points.
